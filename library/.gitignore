@@ -1,0 +1,11 @@
+# Book contents stay out of git — the library is a local cache, not repo content.
+*
+!.gitignore
+!README.md
+
+# Inside a book directory, keep your own analysis but not the book itself.
+!*/
+*/text.txt
+*/chapters.json
+*/META.json
+*/source/
