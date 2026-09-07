@@ -1,11 +1,9 @@
 # Book contents stay out of git — the library is a local cache, not repo content.
+# Your own analysis (SUMMARY.md, notes.md) IS kept. To drop that too, delete the
+# `!*/*.md` line below.
 *
 !.gitignore
 !README.md
-
-# Inside a book directory, keep your own analysis but not the book itself.
 !*/
-*/text.txt
-*/chapters.json
-*/META.json
+!*/*.md
 */source/

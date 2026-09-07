@@ -20,6 +20,23 @@ compatibility: 需要 Python 3.8+ 与网络访问（gutenberg.org、wikisource.o
 
 ---
 
+## 路径约定（先看这条）
+
+下面所有命令写成 `python3 scripts/booklib.py`，其中 `scripts/` 指**本技能目录**，
+而**工作目录是用户的项目根目录**——书库要落在用户项目里，不是技能安装目录里。
+
+实际执行时把脚本换成绝对路径，例如：
+
+```bash
+cd <用户项目根目录>
+python3 ~/.cursor/skills/reading-summary/scripts/booklib.py list
+```
+
+第一次运行会自动创建 `library/` 并写入 `.gitignore`（正文不进版本库）。
+要把书库放到别处就设 `BOOKLIB_ROOT=/path/to/library`。
+
+---
+
 ## 工作流
 
 ```

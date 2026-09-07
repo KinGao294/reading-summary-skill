@@ -72,9 +72,26 @@ def http_get(url: str, params: "dict | None" = None, binary: bool = False, timeo
     return raw if binary else raw.decode("utf-8", errors="replace")
 
 
+GITIGNORE = """\
+# Book contents stay out of git — the library is a local cache, not repo content.
+# Your own analysis (SUMMARY.md, notes.md) IS kept. To drop that too, delete the
+# `!*/*.md` line below.
+*
+!.gitignore
+!README.md
+!*/
+!*/*.md
+*/source/
+"""
+
+
 def library_root() -> Path:
     root = Path(os.environ.get("BOOKLIB_ROOT", "library")).resolve()
+    fresh = not root.exists()
     root.mkdir(parents=True, exist_ok=True)
+    if fresh or not (root / ".gitignore").exists():
+        # Nobody wants a 2.6 MB novel in their diff; make the guarantee real, not documented.
+        (root / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
     return root
 
 
