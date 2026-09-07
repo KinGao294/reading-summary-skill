@@ -1,171 +1,291 @@
 <h1 align="center">reading-summary-skill</h1>
 
 <p align="center">
-  <b>读完一本书，只留一页纸。</b><br>
-  给 Agent 一个<b>合法</b> PDF，换回「1 主旨 / 5 要点 / 3 行动 / 1 存疑」。
+  <b>说一句「总结一下红楼梦」，Agent 帮你把书下下来、读完、写出精读报告，<br>
+  然后这本书就一直在你项目里，随时可以接着问。</b>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
-  <img alt="Legal-first" src="https://img.shields.io/badge/policy-legal--first-brightgreen.svg">
-  <a href="skills/reading-summary/SKILL.md"><img alt="Agent Skill" src="https://img.shields.io/badge/agent%20skill-reading--summary-blue.svg"></a>
+  <img alt="Python 3.8+" src="https://img.shields.io/badge/python-3.8%2B-blue.svg">
+  <img alt="zero dependencies" src="https://img.shields.io/badge/deps-stdlib%20only-brightgreen.svg">
+  <a href="skills/reading-summary/SKILL.md"><img alt="Agent Skill" src="https://img.shields.io/badge/agent%20skill-reading--summary-8a2be2.svg"></a>
 </p>
 
 ---
 
 ## 30 秒看懂
 
-大多数 AI 读书笔记的问题不是太短，是**太全**——把目录复述一遍，读完等于没读。
+你问 AI「红楼梦讲了什么」，它凭训练记忆答一段，听着像那么回事，但你没法核对，
+换个问题就开始编。**因为它根本没读那本书。**
 
-这个技能反着来：**粗放、有损、能用**。它逼 Agent 做取舍，只交付四样东西：
+这个技能换了个做法：**先把书真的下载下来，读完，再说话。**
 
-| | 内容 | 为什么是它 |
+```
+你：总结一下红楼梦这本书讲了什么
+
+Agent：
+  → 检索来源              Project Gutenberg #24264（120 回全本）
+  → 下载入库              library/hong-lou-meng/  72 万汉字
+  → 建章节索引            120 回，回目全部识别
+  → 分章精读 + 记笔记     notes.md，每条带回目定位
+  → 输出七段式精读报告    SUMMARY.md，约 950 字
+
+  《红楼梦》已入库，接下来可以直接问我：
+    · 黛玉葬花在第几回？前后发生了什么？
+    · 王熙凤的权力是怎么一步步失去的？
+```
+
+关键在最后一步。书留在你项目里了，**下一句、下一周、下一个新会话，都能接着问**，
+而且每个答案都带 `第N回` 定位，你能自己翻回去核对。
+
+## 与「让 AI 总结一本书」的区别
+
+| | 通常的做法 | 这个技能 |
 |---|---|---|
-| **1 主旨** | 一句话，能被反驳的那种 | 说不出一句话，就是没读懂 |
-| **5 要点** | 撑起论证的承重墙 | 不是五个金句，是五个支点 |
-| **3 行动** | 下周一就能做 | 「要更系统地思考」不算行动 |
-| **1 存疑** | 这本书最脆的地方 | 没有存疑的笔记只是腰封 |
+| 正文 | 没有，凭记忆 | 真下载到 `library/<slug>/` |
+| 长书 | 超上下文，只能糊弄 | 章节索引 + 按章读，120 回也能处理 |
+| 产出 | 一段书评 | ≥300–500 字七段式报告，长篇经典 800+ |
+| 引用 | 说不出在哪 | 带回目/行号，可复查 |
+| 追问 | 重新编一遍 | 回原文检索，答案扎根文本 |
+| 下次 | 从头再来 | 书还在，笔记还在 |
 
-配额是硬的。5 就是 5，3 就是 3。删不下去，说明还在复述。
+## 工作流
 
-## 它做什么 / 不做什么
+```mermaid
+flowchart TD
+    A["「总结一下红楼梦」"] --> B{"library/ 里有吗？"}
+    B -- 有 --> Q
+    B -- 没有 --> C["booklib.py search<br/>古登堡 + 维基文库，自动简繁映射"]
+    C --> D["booklib.py fetch<br/>下载 + 抽文本 + 建章节索引"]
+    D --> E["library/#lt;slug#gt;/<br/>META.json · text.txt · chapters.json"]
+    E --> F["分章精读<br/>read / grep，边读边记 notes.md"]
+    F --> G["SUMMARY.md<br/>七段式精读报告"]
+    G --> Q["追问模式<br/>grep 定位 → read 原文 → 带出处作答"]
+    Q --> Q
+```
 
-**做：**
+## 七段式精读报告
 
-- 从你自己的文件、公有领域、开放获取（OA）、官方免费发布里拿到正文
-- 读脊梁不读大纲：主张、承重论点、证据类型、相信它的代价
-- 输出一页纸的笔记，标注来源与阅读范围（全书 / 前四章 / 仅摘要）
+不是「1 主旨 + 5 要点」这种要点罗列。七段各有分工，缺一段就有一块看不见：
 
-**不做：**
+| 段落 | 篇幅 | 回答什么 |
+|---|---|---|
+| **一句话主旨** | 40–60 字 | 全书的统一性压成一句，且可被反驳 |
+| **结构与脉络** | 80–120 字 | 分几部分、怎么推进——骨架，不是流水账 |
+| **人物与关系** | 100–150 字 | 谁要什么、受什么牵制、关系网怎么绷着 |
+| **关键事件与转折** | 80–120 字 | 3–5 个转折点，**每个带回目定位** |
+| **主题与母题** | 100–150 字 | 论点 → 文本证据 → 阐释，三步走 |
+| **能带走什么** | 60–100 字 | 谁该读、为什么、什么情况下别读 |
+| **版本与阅读范围** | 2–3 行 | 出处、版本、**实际读了多少** |
 
-- 不逐章复述，不生成"内容丰富、值得一读"这类空话
-- 不编造页码、引文、研究结论、章节名
-- 不搬运原文——短引用带定位，绝不复现大段受版权保护的内容
-- **不碰任何盗版路径**（见下方红线）
+框架是从几套成熟方法里各取一件真正管用的东西拼的：Adler《如何阅读一本书》的
+分析阅读规则（主旨与结构）、文学分析的标准要素（人物、主题、母题）、
+Shortform 的分章证据层、getAbstract 的评价性收束。
+非虚构作品自动切换中间两段为「核心概念」与「承重论证 + 证据类型」。
 
-## 输出长什么样
+完整模板、字数配比与真实样例：
+[`references/summary-framework.md`](skills/reading-summary/references/summary-framework.md)
 
-以《思考，快与慢》为例，来源为**用户自有电子书**。
+<details>
+<summary><b>展开看《红楼梦》精读报告节选（真实产出，定位均经原文核对）</b></summary>
 
-<table>
-<tr><th width="50%">❌ 通常你会拿到</th><th width="50%">✅ 这个技能给你</th></tr>
-<tr valign="top"><td>
+> **一句话主旨**
+> 一个鼎盛世家在自身规则的运转中走向崩塌，而最清醒的几个年轻人只能眼看着，
+> 无力阻止，也无处可逃。
+>
+> **人物与关系**
+> 贾宝玉厌弃仕途经济，却又只能靠这个家族提供的庇护活着，这个矛盾贯穿全书。
+> 林黛玉与他共享同一种价值判断，因此成为知己，也因此在婚姻市场上毫无胜算；
+> 薛宝钗则完全按世俗规则行事，赢得了婚姻，输掉了丈夫。三人构成的不是情感三角，
+> 而是三种应对同一套制度的方式。
+>
+> **关键事件与转折**（节选 2 条）
+> - 第五回｜宝玉梦游太虚幻境，看到十二钗判词与《红楼梦》曲——全书结局在此提前公布，
+>   此后所有情节都成了对既定命运的印证，悬念从"会怎样"转为"怎么落到那一步"。
+> - 第七十四回｜抄检大观园——外部压力第一次转为内部互相清算，园子作为庇护所的功能就此终结。
+>
+> **版本与阅读范围**
+> Project Gutenberg #24264 ｜程高本 120 回，后四十回作者归属存在争议，本报告不预设立场
+> ｜通读全部 120 回回目 + 精读第 1、5、13、18、27、74、97、105、120 回
 
-> 本书由诺贝尔奖得主卡尼曼所著，系统阐述了人类思维的两套系统。第一部分介绍系统 1 与系统 2，第二部分讨论启发式与偏差，第三部分……全书内容丰富，案例翔实，是行为经济学领域的经典之作，值得每一位读者细细品读。
+</details>
 
-*读完之后，你依然不知道明天该改变什么。*
+## 追问才是重点
 
-</td><td>
+书入库之后，它就成了可查的语料。Agent 的动作固定是
+**先 `grep` 定位 → 再 `read` 原文 → 最后带出处作答**：
 
-**主旨**：多数判断失误不是因为系统 1 太蠢，而是因为系统 2 太懒——它常常不去核验，只负责为直觉背书。
+```
+你：黛玉葬花在第几回？
 
-**5 要点**（节选 2 条）
-1. **锚定**——先出现的数字会污染后续估计，哪怕明知它随机无关。
-2. **回归均值**——被误读成因果，于是"批评有效、表扬有害"这类结论被反复生产。
+Agent：黛玉葬花在第二十七回「滴翠亭楊妃戲彩蝶　埋香冢飛燕泣殘紅」。
 
-**3 行动**（节选 1 条）
-- [ ] 谈判前先写下自己的报价区间，再看对方开价——把锚定挡在门外。
+      起因在前一回：黛玉夜访怡红院吃了闭门羹（第二十六回），第二天正逢饯花之期，
+      她把落花收葬并作《葬花吟》。"儂今葬花人笑痴，他年葬儂知是誰"（L6406）
+      是全诗题眼——她葬的是花，说的是自己。
 
-**存疑**：书中社会启动（priming）相关研究在复制危机中大面积翻车，作者本人 2017 年公开承认该章证据薄弱。读第 4 章时打折。
+      这条线后面还有两处回响：宝玉在山坡后听到这句而恸倒（第二十八回，L6416）；
+      第三十回宝玉见龄官画蔷，心里拿她与"颦儿葬花"作比（L7277）。
+      所以葬花不是孤立场面，是黛玉结局的预告。
+```
 
-</td></tr>
-</table>
+三个定位你都能自己翻回去核对——**这就是「扎根原文」的可操作定义**。
+检索不到的时候它会直说检索不到，不会拿常识补。
 
-> 上表为格式示例，非逐字输出；真实笔记会带来源与阅读范围标注。
+协议细节：[`references/qa-protocol.md`](skills/reading-summary/references/qa-protocol.md)
+
+## 书库长什么样
+
+```
+library/
+└── hong-lou-meng/
+    ├── META.json        # 出处、版本、sha256、字数、获取时间
+    ├── text.txt         # 规范化正文 —— 所有回答的唯一依据
+    ├── chapters.json    # 120 回索引：序号 / 回目 / 起止行 / 字数
+    ├── SUMMARY.md       # 七段式精读报告
+    ├── notes.md         # 分章笔记，每条带定位
+    └── source/
+        └── pg24264.txt  # 原始下载件，只读
+```
+
+正文默认不进 git（`library/.gitignore` 已配好），`SUMMARY.md` 和 `notes.md` 会保留——
+笔记值得进版本库，几十兆的原文不值得。
 
 ## 安装
 
-技能只有一个文件：[`skills/reading-summary/SKILL.md`](skills/reading-summary/SKILL.md)。
-
 ```bash
 git clone https://github.com/KinGao294/reading-summary-skill.git
+cd reading-summary-skill
 ```
 
-放到你的 Agent 能发现的目录：
+把 `skills/reading-summary/` **整个目录**放到 Agent 能发现的位置
+（`SKILL.md` 会引用 `references/` 和 `scripts/`，只拷单个文件会瘸）：
 
 | 环境 | 位置 |
 |---|---|
-| **Cursor（个人）** | `~/.cursor/skills/reading-summary/SKILL.md` |
-| **Cursor（项目）** | `<repo>/.cursor/skills/reading-summary/SKILL.md` |
-| **Grok Bot / 其他** | 你的 skills 目录，或直接把全文粘进 system prompt |
+| **Cursor（个人）** | `~/.cursor/skills/reading-summary/` |
+| **Cursor（项目）** | `<repo>/.cursor/skills/reading-summary/` |
+| **Claude Code** | `~/.claude/skills/reading-summary/` |
+| **Codex / Grok Bot / 其他** | 各自的 skills 目录；不支持 skills 机制的，把 `SKILL.md` 贴进 system prompt，并把 `scripts/booklib.py` 放进项目里 |
 
 ```bash
-mkdir -p ~/.cursor/skills/reading-summary
-cp skills/reading-summary/SKILL.md ~/.cursor/skills/reading-summary/
+mkdir -p ~/.cursor/skills
+cp -r skills/reading-summary ~/.cursor/skills/
 ```
 
-文件头部的 YAML `description` 决定了 Agent 何时自动调用它——别删。不支持 skills 机制的工具，把 SKILL.md 全文当提示词贴进去也能用。
+`SKILL.md` 头部的 YAML `description` 决定 Agent 什么时候自动调用它——别删。
 
-## 怎么用
+**依赖**：Python 3.8+，纯标准库。txt / EPUB / HTML 开箱即用；
+PDF 需要 `pdftotext`（`apt install poppler-utils`）或 `pip install pypdf`。
 
-装好之后，正常说话即可：
+## 单独用命令行
+
+`booklib.py` 自己就是个能用的工具，不装 skill 也能跑：
+
+```bash
+python3 skills/reading-summary/scripts/booklib.py search "红楼梦" --lang zh
+python3 skills/reading-summary/scripts/booklib.py fetch gutenberg 24264 --slug hong-lou-meng
+python3 skills/reading-summary/scripts/booklib.py show hong-lou-meng --sections 20
+python3 skills/reading-summary/scripts/booklib.py read hong-lou-meng --chapter 27
+python3 skills/reading-summary/scripts/booklib.py grep hong-lou-meng "葬花|花冢" --max 20
+python3 skills/reading-summary/scripts/booklib.py list
+```
+
+<details>
+<summary><b>全部子命令</b></summary>
 
 ```
-帮我读一下这个 PDF，出个读书笔记            （附件）
-《XXX》我有正版 epub，总结成一页纸           （附件）
-arxiv.org/abs/1706.03762 这篇，5 个要点讲清楚
-这本书值不值得读？先给我主旨和存疑
+search <query> [--lang zh]        古登堡目录 + 维基文库联合检索，自动简繁映射
+fetch gutenberg <id>              下载公有领域全本
+fetch wikisource "<标题>"          按子页面下载，分回质量最好
+fetch arxiv <id>                  下载论文 PDF 并抽文本
+fetch url "<url>" --rights "..."  官方免费发布 / OA 直链
+add <path>                        登记你自己的文件（txt/epub/pdf/html）
+index <slug>                      重建章节索引
+read <slug> --chapter N           读一章
+read <slug> --start N --limit M   读任意行窗口
+grep <slug> "<正则>"               检索，输出带章节定位
+list / show <slug>                书库总览 / 单本详情
 ```
 
-想改口径，直接说：`只读前三章` / `行动项换成团队视角` / `用英文输出`。
+</details>
 
-## 合法红线
+## 支持的来源
 
-仅限合法来源是**硬性要求**，不是可以调低的默认档位。这里没有开关、没有配置项、没有"就这一次"。
+按优先级下探，命中即停：
 
-**✅ 走这四条路**
+1. **你自己的文件** —— `add ./book.epub`，买过的、自己写的、附件
+2. **公有领域** —— Project Gutenberg（含中文四大名著）、中英文维基文库
+3. **开放获取** —— arXiv、OpenAlex、Europe PMC、DOAJ
+4. **官方免费发布** —— 出版社免费全书、政府与 NGO 报告、公司白皮书
 
-1. 你自己的文件——附件、本地路径、买过的、自己写的
-2. 公有领域与开放获取——Project Gutenberg、arXiv、PMC、DOAJ、机构仓储、政府与 NGO 报告
-3. 官方免费发布——作者主页、出版社样章、公司白皮书、会议论文集
-4. 都没有？那就明说没有，并建议你通过图书馆借阅、正版购买等正规渠道自行获取
+四级都没有正文时，技能会直说没读到，并给出替代路径
+（上传你的正版文件 / 官方样章 / 明确标注的二手资料概要），
+而不是假装读过。影子图书馆、盗版站、Sci-Hub 一类未授权分发、
+绕过付费墙与 DRM 不在支持范围内。
 
-**❌ 一律不做**
+<details>
+<summary><b>已验证的中文书号与两个坑</b></summary>
 
-- 盗版库、影子图书馆、破解电子书、种子站
-- Sci-Hub 及同类未授权论文获取服务
-- 绕过付费墙、登录墙、DRM、频率限制
-- 抓取用户未证明拥有访问权的订阅内容
-- 整本扫描 / 复印借阅或借来的书，以及流通这类扫描件
+| ID | 书名 | 备注 |
+|---|---|---|
+| 24264 | 紅樓夢 | 120 回全，72 万汉字 |
+| 23962 | 西遊記 | |
+| 23863 | 水滸傳 | |
+| 23950 | 三國志演義 | 注意**不叫**「三國演義」 |
+| 23839 | 論語 | |
+| 7337 | 道德經 | |
+| 24226 | 史記 | |
 
-拿不到正文时，技能会退到「摘要 + 公开书评 + 作者演讲」并**明确标注阅读范围**，而不是假装读过全书。版权合规的最终责任在使用者。
+**坑一：简繁。** 古登堡目录存的是繁体「紅樓夢」，用户打简体「红楼梦」直接查不到。
+`search` 已通过维基文库重定向表自动补繁体变体。
 
-## 为什么会有这个东西
+**坑二：同名英译。** 搜 "Dream of the Red Chamber" 命中的 #9603/#9604 是英文节译本，
+不是中文原著。中文提问务必带 `--lang zh`。
 
-三个让人恼火的现实：
+</details>
 
-1. **模型倾向于讨好，不倾向于取舍。** 不给硬配额，它就把所有章节都塞给你，因为那样不会出错。
-2. **大多数"总结"没有立场。** 没有主旨就无从反驳，没有存疑就等于软广。
-3. **多数读书工具对来源装糊涂。** 与其事后免责，不如把合法性写进第一步。
+## 致谢
 
-所以这里的设计就三句话：**先合法拿到正文，再强制取舍，最后必须留一处怀疑。**
+`booklib.py` 不是从零发明的，架构参考了两个现成的开源项目，均为适配重写而非搬运代码：
+
+- **[blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server)**（Apache-2.0）——
+  持久化存储 + 章节大纲 + 窗口式读取（`resources/papers.py`、`tools/paper_outline.py`）。
+  「文献留在磁盘上、按 section 定位读取」这个让长文档可处理的核心思路来自它。
+- **[sea9401/philosophy-mcp](https://github.com/sea9401/philosophy-mcp)**（MIT）——
+  多来源逐级下探的获取阶梯（`src/books.ts`）。本项目把其中的 Gutendex 换成了古登堡官方
+  目录 CSV：Gutendex 在受限网络下会撞 Cloudflare 质询页，而官方 CSV 下载一次即可离线检索。
+
+摘要框架参考了 Adler《如何阅读一本书》的分析阅读规则、文学分析的标准要素、
+Shortform 的分章结构与 getAbstract 的评价性收束。
 
 ## FAQ
 
-**Q：只有摘要，没有全文，还能用吗？**
-能。技能会基于摘要和公开材料输出，并在「阅读范围」里写清楚是摘要级，不冒充读完。
+**Q：120 回的长篇怎么塞进上下文？**
+不塞。`chapters.json` 把书切成可定位的章节，Agent 按章读、边读边把带定位的笔记写进
+`notes.md`，最后据笔记归纳。这也是为什么追问时它能精确翻回某一回。
 
-**Q：为什么必须有「1 存疑」？**
-因为它是唯一防止笔记退化成推荐语的结构。书真的很扎实，就去质疑它的适用边界。
+**Q：会不会假装读过？**
+框架里「版本与阅读范围」是必填项，要求如实写明通读了哪些、抽读了哪些。
+拿不到正文时会明说没读到，二手资料概要会显著标注且不写进 `library/`。
 
-**Q：能出英文笔记吗？**
-能。默认跟随你的提问语言，也可以直接指定。
+**Q：论文、报告能用吗？**
+能。arXiv 一条命令入库，非虚构会自动切换成「核心概念 + 承重论证 + 证据类型」的写法。
 
-**Q：论文、财报、行研报告能用吗？**
-能，任何长文档都行。OA 论文反而是最省事的场景。
+**Q：需要 API Key 吗？**
+不需要。古登堡、维基文库、arXiv 都是免密接口。
 
-**Q：能改成 10 要点 / 5 行动吗？**
-能，但先按 5/3 跑一遍。配额带来的痛苦就是这个技能的价值本身。
+**Q：能换成英文输出吗？**
+能，默认跟随你的提问语言，也可以直接指定。
 
-**Q：会读扫描件吗？**
-如果那份扫描件本来就合法属于你（比如出版社提供的影印版），取决于你的 Agent 有没有 OCR——纯图片 PDF 抽不出文本，效果会明显变差。这不是让你去扫描借来的书。
-
-**Q：需要联网 / API Key 吗？**
-不需要。这是一个 Markdown 提示词文件，能力全部来自你的 Agent。
+**Q：书库能提交进 git 吗？**
+`library/.gitignore` 默认忽略正文和原始文件，保留 `SUMMARY.md` 与 `notes.md`。
 
 ## 参与
 
-Issue 和 PR 都欢迎，尤其是：让输出更狠的措辞、更多合法来源清单、其他 Agent 平台的安装说明。不接受任何形式的盗版获取逻辑。
+Issue 和 PR 都欢迎，尤其是：更多合法来源适配器、其他语种的章节识别规则、
+其他 Agent 平台的安装说明、以及让精读报告更锋利的措辞。
 
 ## License
 
@@ -177,91 +297,84 @@ Issue 和 PR 都欢迎，尤其是：让输出更狠的措辞、更多合法来�
 
 # English
 
-**Give the agent one legally obtained PDF, get back one page: 1 thesis / 5 points / 3 actions / 1 doubt.**
+**Say "summarize 红楼梦" — the agent downloads the book, reads it, writes a structured
+deep-read report, and keeps it in your project so you can go on asking questions about it.**
 
-## The idea
+## Why
 
-Most AI book summaries fail by being *complete*, not by being short — they replay the table of
-contents and leave you with nothing to do. This skill forces the opposite: coarse, lossy, usable.
+Ask an AI what a book is about and it answers from training memory. It sounds right,
+you can't check it, and it starts inventing as soon as you push. It never read the book.
 
-| | What | Why |
-|---|---|---|
-| **1 thesis** | One sentence someone could argue against | Can't state it? You didn't get it. |
-| **5 points** | The load-bearing ideas, not five nice quotes | The argument's actual supports |
-| **3 actions** | Doable next Monday | "Think more systematically" doesn't count |
-| **1 doubt** | The weakest link in the book | A note with no doubt is a book jacket |
+This skill downloads the text first, then talks. What you get back is not a review —
+it's a local library you can keep querying, with every answer carrying a chapter locator
+you can verify yourself.
 
-The quotas are hard. Five means five, three means three. Cutting is the work.
+```
+you: summarize 红楼梦
 
-## Does / doesn't
+  → search sources        Project Gutenberg #24264 (complete 120-chapter edition)
+  → download              library/hong-lou-meng/  724k CJK chars
+  → build chapter index   120 chapters, all titles recovered
+  → read chapter by chapter, taking located notes
+  → write SUMMARY.md      seven-part report, ~950 characters
 
-**Does:** pull text from your own files, public domain, open access, or official free releases;
-read for the spine (claim, supports, evidence type, cost of believing it); label source and
-reading scope (full book / ch. 1–4 / abstract only).
+  Now ask: "which chapter is 黛玉葬花?" -> grep, read, answer with 第二十七回 + line numbers
+```
 
-**Doesn't:** recap chapter by chapter; invent page numbers, quotes, or findings; reproduce
-substantial copyrighted text; touch any piracy route.
+## The seven-part framework
+
+Not "one thesis, five bullets". Seven sections, each doing a job the others can't:
+**thesis** (40–60 chars, one arguable sentence) · **structure** (how the parts relate,
+not a plot recap) · **characters and relationships** · **turning points** (3–5, each with a
+chapter locator) · **themes and motifs** (claim → textual evidence → interpretation) ·
+**what you take away** (who should read it) · **edition and reading scope** (what was
+actually read). Floor is 300–500 CJK characters; a long classic lands at 800–1200.
+
+Distilled from Adler's analytical reading rules, standard literary-analysis elements,
+Shortform's per-chapter evidence layer, and getAbstract's evaluative close. Non-fiction
+swaps the middle two sections for key concepts and load-bearing arguments with evidence types.
 
 ## Install
 
-The skill is one file: [`skills/reading-summary/SKILL.md`](skills/reading-summary/SKILL.md).
-
 ```bash
 git clone https://github.com/KinGao294/reading-summary-skill.git
-mkdir -p ~/.cursor/skills/reading-summary
-cp skills/reading-summary/SKILL.md ~/.cursor/skills/reading-summary/
+mkdir -p ~/.cursor/skills
+cp -r skills/reading-summary ~/.cursor/skills/
 ```
 
-- **Cursor (personal):** `~/.cursor/skills/reading-summary/SKILL.md`
-- **Cursor (project):** `<repo>/.cursor/skills/reading-summary/SKILL.md`
-- **Grok Bot / others:** your skills directory, or paste the file into the system prompt
+Copy the **whole directory** — `SKILL.md` references `references/` and `scripts/`.
 
-Keep the YAML `description` at the top — that's what triggers auto-invocation.
+- **Cursor:** `~/.cursor/skills/reading-summary/` or `<repo>/.cursor/skills/reading-summary/`
+- **Claude Code:** `~/.claude/skills/reading-summary/`
+- **Codex / Grok Bot / others:** your skills directory, or paste `SKILL.md` into the system
+  prompt and drop `scripts/booklib.py` into the project
 
-## Usage
+Python 3.8+, standard library only. PDFs additionally need `pdftotext` or `pypdf`.
 
+## The CLI works standalone
+
+```bash
+python3 skills/reading-summary/scripts/booklib.py search "红楼梦" --lang zh
+python3 skills/reading-summary/scripts/booklib.py fetch gutenberg 24264 --slug hong-lou-meng
+python3 skills/reading-summary/scripts/booklib.py read hong-lou-meng --chapter 27
+python3 skills/reading-summary/scripts/booklib.py grep hong-lou-meng "葬花|花冢"
 ```
-Summarize this PDF as a reading note            (attach the file)
-I own the epub of <title> — give me one page    (attach the file)
-arxiv.org/abs/1706.03762 — five points, plainly
-Is this book worth reading? Thesis and doubt first.
-```
 
-Steer it in plain language: `first three chapters only`, `actions from a team lead's view`,
-`answer in English`.
+Sources, in order: **your own files** → **public domain** (Project Gutenberg, Wikisource) →
+**open access** (arXiv, OpenAlex, Europe PMC, DOAJ) → **official free releases**. When none
+of those has the full text, the skill says so and offers alternatives instead of pretending.
+Shadow libraries, Sci-Hub-style unauthorized distribution, and paywall or DRM circumvention
+are out of scope.
 
-## Legal red lines
+## Credits
 
-Legal-only is a **hard requirement**, not a default setting you can turn down. There is no flag,
-no config option, and no "just this once".
-
-Sources, in order: **your own files** → **public domain / open access** (Gutenberg, arXiv, PMC,
-DOAJ, institutional repositories, government and NGO reports) → **official free releases**
-(author sites, publisher sample chapters, whitepapers, proceedings) → **say there isn't one** and
-suggest you borrow it from a library or buy a copy through normal channels.
-
-Never: shadow libraries, cracked ebooks, torrents, DRM stripping, paywall/login-wall bypass,
-Sci-Hub and equivalent unauthorized paper services, or scanning a borrowed book cover to cover
-(and circulating such scans). When no legal full text exists, the skill falls back to abstract
-plus public reviews and **says so** in the reading scope line. You remain responsible for your
-rights to any content you process.
-
-## FAQ
-
-- **Abstract only?** Works, and labels itself as abstract-level.
-- **Why is the doubt mandatory?** It's the only thing stopping a note from becoming an ad.
-- **Papers and reports?** Yes — OA papers are the easiest case.
-- **Change 5/3 to something else?** Sure, but run it as 5/3 once first. The squeeze is the point.
-- **Scanned PDFs?** If the scan is legitimately yours, only as well as your agent's OCR. This is
-  not an invitation to scan a borrowed book.
-- **API key or network?** Neither. It's a Markdown prompt file; all capability comes from your agent.
-
-## Contributing
-
-Issues and PRs welcome — sharper output wording, more legal source lists, install notes for other
-agent platforms. No acquisition logic of any kind will be accepted.
+`booklib.py` adapts (does not vendor) two existing projects:
+[blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) (Apache-2.0) for
+the storage, outline and windowed-read architecture that makes long documents tractable, and
+[sea9401/philosophy-mcp](https://github.com/sea9401/philosophy-mcp) (MIT) for the multi-source
+acquisition ladder — with Gutendex swapped for Gutenberg's own catalog CSV, since Gutendex
+sits behind a Cloudflare challenge on restricted networks.
 
 ## License
 
-[MIT](LICENSE) © 2026 KinGao294. Open source is not a liability waiver: you must hold the rights
-to whatever you process.
+[MIT](LICENSE) © 2026 KinGao294. You must hold the rights to whatever you process.
