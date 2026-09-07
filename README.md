@@ -111,21 +111,22 @@ arxiv.org/abs/1706.03762 这篇，5 个要点讲清楚
 
 ## 合法红线
 
-这条线不接受"就这一次"。
+仅限合法来源是**硬性要求**，不是可以调低的默认档位。这里没有开关、没有配置项、没有"就这一次"。
 
 **✅ 走这四条路**
 
 1. 你自己的文件——附件、本地路径、买过的、自己写的
 2. 公有领域与开放获取——Project Gutenberg、arXiv、PMC、DOAJ、机构仓储、政府与 NGO 报告
 3. 官方免费发布——作者主页、出版社样章、公司白皮书、会议论文集
-4. 都没有？那就明说没有，并给出图书馆 / 馆际互借 / 正版购买的替代路径
+4. 都没有？那就明说没有，并建议你通过图书馆借阅、正版购买等正规渠道自行获取
 
 **❌ 一律不做**
 
 - 盗版库、影子图书馆、破解电子书、种子站
-- Sci-Hub 及同类服务——**没有"默认关闭"，也没有"用户说合法就开"**
+- Sci-Hub 及同类未授权论文获取服务
 - 绕过付费墙、登录墙、DRM、频率限制
 - 抓取用户未证明拥有访问权的订阅内容
+- 整本扫描 / 复印借阅或借来的书，以及流通这类扫描件
 
 拿不到正文时，技能会退到「摘要 + 公开书评 + 作者演讲」并**明确标注阅读范围**，而不是假装读过全书。版权合规的最终责任在使用者。
 
@@ -157,7 +158,7 @@ arxiv.org/abs/1706.03762 这篇，5 个要点讲清楚
 能，但先按 5/3 跑一遍。配额带来的痛苦就是这个技能的价值本身。
 
 **Q：会读扫描件吗？**
-取决于你的 Agent 有没有 OCR。纯图片 PDF 抽不出文本，效果会明显变差。
+如果那份扫描件本来就合法属于你（比如出版社提供的影印版），取决于你的 Agent 有没有 OCR——纯图片 PDF 抽不出文本，效果会明显变差。这不是让你去扫描借来的书。
 
 **Q：需要联网 / API Key 吗？**
 不需要。这是一个 Markdown 提示词文件，能力全部来自你的 Agent。
@@ -231,15 +232,19 @@ Steer it in plain language: `first three chapters only`, `actions from a team le
 
 ## Legal red lines
 
+Legal-only is a **hard requirement**, not a default setting you can turn down. There is no flag,
+no config option, and no "just this once".
+
 Sources, in order: **your own files** → **public domain / open access** (Gutenberg, arXiv, PMC,
 DOAJ, institutional repositories, government and NGO reports) → **official free releases**
 (author sites, publisher sample chapters, whitepapers, proceedings) → **say there isn't one** and
-point at the library, interlibrary loan, or a purchase link.
+suggest you borrow it from a library or buy a copy through normal channels.
 
-Never: shadow libraries, cracked ebooks, torrents, DRM stripping, paywall/login-wall bypass, or
-Sci-Hub — no default-off toggle, no "the user said it's legal here" exception. When no legal full
-text exists, the skill falls back to abstract plus public reviews and **says so** in the reading
-scope line. You remain responsible for your rights to any content you process.
+Never: shadow libraries, cracked ebooks, torrents, DRM stripping, paywall/login-wall bypass,
+Sci-Hub and equivalent unauthorized paper services, or scanning a borrowed book cover to cover
+(and circulating such scans). When no legal full text exists, the skill falls back to abstract
+plus public reviews and **says so** in the reading scope line. You remain responsible for your
+rights to any content you process.
 
 ## FAQ
 
@@ -247,7 +252,8 @@ scope line. You remain responsible for your rights to any content you process.
 - **Why is the doubt mandatory?** It's the only thing stopping a note from becoming an ad.
 - **Papers and reports?** Yes — OA papers are the easiest case.
 - **Change 5/3 to something else?** Sure, but run it as 5/3 once first. The squeeze is the point.
-- **Scanned PDFs?** Only as well as your agent's OCR.
+- **Scanned PDFs?** If the scan is legitimately yours, only as well as your agent's OCR. This is
+  not an invitation to scan a borrowed book.
 - **API key or network?** Neither. It's a Markdown prompt file; all capability comes from your agent.
 
 ## Contributing
